@@ -1,0 +1,45 @@
+databases:
+  - name: vitalwatch-db
+    plan: free
+    databaseName: vitalwatch
+    user: vitalwatch
+
+services:
+  - type: web
+    name: vitalwatch
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: vitalwatch-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: VitalWatch
+      - key: EMAIL_FROM_ADDRESS
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true
+
+  - type: cron
+    name: vitalwatch-reminder-check
+    runtime: node
+    plan: free
+    schedule: "*/15 * * * *"
+    buildCommand: "true"
+    startCommand: 'curl -sf -H "Authorization: Bearer $CRON_SECRET" "$NEXT_PUBLIC_APP_URL/api/cron/check-reminders"'
+    envVars:
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
