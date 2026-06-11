@@ -1,16 +1,11 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { getRecentLogs, getRemindersWithWeek } from '@/lib/data';
+import { getCurrentUser, getRecentLogs, getRemindersWithWeek } from '@/lib/data';
 import { Icon } from '@/components/ui/icon';
 import { AccessCard } from '@/components/caregiver/access-card';
 import { CaregiverPreview } from '@/components/caregiver/caregiver-preview';
 
 export default async function Caregiver() {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/login');
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await getCurrentUser();
   if (!user) redirect('/login');
 
   const [logs, reminders] = await Promise.all([

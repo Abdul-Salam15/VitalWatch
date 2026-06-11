@@ -1,16 +1,12 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { getCurrentUser } from '@/lib/data';
 import { ProfileSection } from '@/components/settings/profile-section';
 import { CaregiverSection } from '@/components/settings/caregiver-section';
 import { NotificationsSection } from '@/components/settings/notifications-section';
 import { DangerSection } from '@/components/settings/danger-section';
 
 export default async function Settings() {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/login');
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await getCurrentUser();
   if (!user) redirect('/login');
 
   return (
