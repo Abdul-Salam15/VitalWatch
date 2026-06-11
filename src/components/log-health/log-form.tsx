@@ -103,7 +103,7 @@ export function LogForm({ onAnalyzing, onResult }: LogFormProps) {
         ))}
 
         <Button type="submit" size="lg" loading={pending} icon={pending ? undefined : 'sparkles'} className="w-full justify-center">
-          {pending ? 'Analyzing with Gemini AI…' : 'Submit & Analyze'}
+          {pending ? 'Analyzing with VitalWatch AI…' : 'Submit & Analyze'}
         </Button>
       </form>
     </Card>
