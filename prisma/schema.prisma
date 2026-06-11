@@ -1,0 +1,80 @@
+// VitalWatch — Prisma schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+
+  // Caregiver / notification settings
+  caregiverName            String  @default("")
+  caregiverEmail           String  @default("")
+  accessToken              String  @unique @default(cuid())
+  notifBrowser             Boolean @default(true)
+  notifEmailSummary        Boolean @default(true)
+  notifCaregiverAnomaly    Boolean @default(true)
+  notifMedReminderEmail    Boolean @default(true)
+  notifCaregiverMissedDose Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs      VitalLog[]
+  reminders Reminder[]
+}
+
+model VitalLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ts          DateTime @default(now())
+  hr          Int
+  spo2        Int
+  temp        Float
+  steps       Int
+  summary     String
+  anomalyFlag Boolean  @default(false)
+
+  @@index([userId, ts])
+}
+
+model Reminder {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  dosage     String
+  time       String // "HH:MM"
+  frequency  String // Daily | Weekdays | Weekends | Custom
+  customDays Int[]    @default([])
+  escalation Int      @default(30)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  doses DoseRecord[]
+
+  @@index([userId])
+}
+
+model DoseRecord {
+  id         String   @id @default(cuid())
+  reminderId String
+  reminder   Reminder @relation(fields: [reminderId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+
+  takenAt               DateTime?
+  reminderEmailSentAt   DateTime?
+  escalationEmailSentAt DateTime?
+
+  @@unique([reminderId, date])
+  @@index([reminderId, date])
+}

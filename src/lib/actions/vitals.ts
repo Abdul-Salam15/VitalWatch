@@ -1,0 +1,65 @@
+'use server';
+
+import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/db';
+import { auth } from '@/lib/auth';
+import { aiProvider } from '@/lib/ai';
+
+const logSchema = z.object({
+  hr: z.coerce.number().min(20).max(250),
+  spo2: z.coerce.number().min(50).max(100),
+  temp: z.coerce.number().min(30).max(45),
+  steps: z.coerce.number().min(0).max(100000),
+});
+
+export interface AddLogResult {
+  error?: string;
+  summary?: string;
+  anomalyFlag?: boolean;
+  recommendations?: string[];
+}
+
+export async function addVitalLog(_prev: AddLogResult | undefined, formData: FormData): Promise<AddLogResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { error: 'Unauthorized' };
+
+  const parsed = logSchema.safeParse({
+    hr: formData.get('hr'),
+    spo2: formData.get('spo2'),
+    temp: formData.get('temp'),
+    steps: formData.get('steps'),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message || 'Invalid input' };
+
+  const { summary, anomalyFlag, recommendations } = aiProvider.analyzeVitals(parsed.data);
+
+  await prisma.vitalLog.create({
+    data: {
+      userId: session.user.id,
+      hr: parsed.data.hr,
+      spo2: parsed.data.spo2,
+      temp: parsed.data.temp,
+      steps: parsed.data.steps,
+      summary,
+      anomalyFlag,
+    },
+  });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/log-health');
+  revalidatePath('/caregiver');
+
+  return { summary, anomalyFlag, recommendations };
+}
+
+export async function deleteVitalLog(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error('Unauthorized');
+
+  await prisma.vitalLog.deleteMany({ where: { id, userId: session.user.id } });
+
+  revalidatePath('/dashboard');
+  revalidatePath('/log-health');
+  revalidatePath('/caregiver');
+}
