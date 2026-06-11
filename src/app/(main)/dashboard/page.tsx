@@ -1,14 +1,9 @@
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { getRecentLogs, getRemindersWithWeek } from '@/lib/data';
+import { getCurrentUser, getRecentLogs, getRemindersWithWeek } from '@/lib/data';
 import { DashboardPage } from '@/components/dashboard/dashboard-page';
 
 export default async function Dashboard() {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/login');
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await getCurrentUser();
   if (!user) redirect('/login');
 
   const [logs, reminders] = await Promise.all([

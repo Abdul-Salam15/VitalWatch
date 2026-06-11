@@ -1,26 +1,23 @@
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db';
-import { getRecentLogs, getRemindersWithWeek } from '@/lib/data';
-import { buildNotifications } from '@/lib/medication';
+import { getCurrentUser } from '@/lib/data';
 import { Shell } from '@/components/layout/shell';
+import { NotificationsLoader } from '@/components/layout/notifications-loader';
+import { NotificationsBellSkeleton } from '@/components/layout/notifications-bell';
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect('/login');
-
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await getCurrentUser();
   if (!user) redirect('/login');
 
-  const [logs, reminders] = await Promise.all([
-    getRecentLogs(user.id, 6),
-    getRemindersWithWeek(user.id),
-  ]);
-
-  const notifications = buildNotifications(logs, reminders);
-
   return (
-    <Shell user={{ name: user.name, email: user.email }} notifications={notifications}>
+    <Shell
+      user={{ name: user.name, email: user.email }}
+      notificationsSlot={
+        <Suspense fallback={<NotificationsBellSkeleton />}>
+          <NotificationsLoader userId={user.id} />
+        </Suspense>
+      }
+    >
       {children}
     </Shell>
   );
