@@ -1,0 +1,16 @@
+name: Check medication reminders
+
+on:
+  schedule:
+    # Every 15 minutes. GitHub may delay scheduled runs slightly, which is fine here.
+    - cron: '*/15 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call check-reminders endpoint
+        run: |
+          curl -sf -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/check-reminders"
