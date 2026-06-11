@@ -42,10 +42,8 @@ body {
 @keyframes vw-scale-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
 @keyframes vw-spin { to { transform: rotate(360deg); } }
 @keyframes vw-toast-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-@keyframes vw-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: .85; } }
 .vw-spin { animation: vw-spin .8s linear infinite; }
 .vw-toast-in { animation: vw-toast-in .28s cubic-bezier(.16,1,.3,1) both; }
-.vw-pulse { animation: vw-pulse 1s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: no-preference) {
   .vw-fade-up { animation: vw-fade-up .4s cubic-bezier(.16,1,.3,1) both; }

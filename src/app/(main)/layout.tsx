@@ -20,7 +20,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const notifications = buildNotifications(logs, reminders);
 
   return (
-    <Shell user={{ name: user.name, email: user.email }} notifications={notifications} reminders={reminders} notifBrowser={user.notifBrowser}>
+    <Shell user={{ name: user.name, email: user.email }} notifications={notifications}>
       {children}
     </Shell>
   );
