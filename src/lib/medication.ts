@@ -1,6 +1,6 @@
 // ── Medication scheduling, adherence & alert derivation ────────────────────
 import { WEEK } from '@/lib/dates';
-import { fmtTime12, fmtDuration, todayIdx, minsNow, reminderMins, todayTsAt, weekdayTs } from '@/lib/dates';
+import { fmtTime12, fmtDuration, todayIdx, minsNow, reminderMins, todayTsAt, weekdayTs, weekdayDate, startOfDay } from '@/lib/dates';
 import { tempStatus, hrStatus, spo2Status } from '@/lib/vitals';
 
 export type AdherenceState = 'taken' | 'missed' | 'pending' | 'none';
@@ -22,6 +22,7 @@ export interface ReminderLite {
   customDays: number[];
   escalation: number;
   active: boolean;
+  createdAt: Date;
 }
 
 export interface ReminderWithWeek extends ReminderLite {
@@ -51,10 +52,12 @@ export function isDueToday(r: ReminderLite, now: Date = new Date()): boolean {
 // 7-day adherence row (Mon..Sun) for a single reminder
 export function weekAdherenceStates(r: ReminderWithWeek, now: Date = new Date()): AdherenceState[] {
   const ti = todayIdx(now);
+  const createdDay = startOfDay(r.createdAt);
   return WEEK.map((_, i) => {
     const dose = r.weekDoses[i];
     if (dose?.takenAt) return 'taken';
     if (!r.active || !isDueOnDay(r, i)) return 'none';
+    if (weekdayDate(i, now) < createdDay) return 'none';
     if (i < ti) return 'missed';
     if (i === ti) return 'pending';
     return 'none';
