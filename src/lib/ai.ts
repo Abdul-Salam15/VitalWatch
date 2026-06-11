@@ -1,6 +1,6 @@
 // ── AI vitals analysis ──────────────────────────────────────────────────────
 // Rule-based implementation behind a small interface so a real model
-// (e.g. Gemini) can be swapped in later without touching call sites.
+// can be swapped in later without touching call sites.
 import { hrStatus, spo2Status, tempStatus } from '@/lib/vitals';
 
 export interface VitalsInput {

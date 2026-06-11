@@ -24,7 +24,7 @@ export const AIResultCard = forwardRef<HTMLDivElement, { log: LogResult }>(funct
       <Card className="p-6 ring-1 ring-brand/15 vw-fade-up">
         <div className="flex items-center justify-between">
           <SectionTitle icon="sparkles" title="AI Analysis Result" />
-          <Badge tone="green" className="bg-brand-light text-brand"><Icon name="zap" size={12} />Powered by Gemini</Badge>
+          <Badge tone="green" className="bg-brand-light text-brand"><Icon name="zap" size={12} />Powered by VitalWatch AI</Badge>
         </div>
 
         <div className={cx('mt-4 flex items-center gap-3 rounded-xl border px-4 py-3', bt.bg, bt.border)}>
