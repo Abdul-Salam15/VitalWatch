@@ -40,6 +40,7 @@ export async function getRemindersWithWeek(userId: string, now: Date = new Date(
       customDays: r.customDays,
       escalation: r.escalation,
       active: r.active,
+      createdAt: r.createdAt,
       weekDoses,
     };
   });
