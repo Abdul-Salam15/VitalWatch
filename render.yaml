@@ -1,3 +1,13 @@
+# Render Blueprint — sized for Render's free tier.
+#
+# Free tier notes:
+# - The free Postgres plan provides 1GB storage and expires 30 days after
+#   creation (14-day grace period to upgrade before data is deleted).
+# - The free web service plan spins down after 15 minutes of inactivity and
+#   takes ~1 minute to spin back up on the next request.
+# - Render cron jobs are NOT available on the free tier (min $1/mo), so the
+#   /api/cron/check-reminders endpoint is instead triggered by a free
+#   scheduled GitHub Actions workflow (see .github/workflows/check-reminders.yml).
 databases:
   - name: vitalwatch-db
     plan: free
@@ -30,16 +40,3 @@ services:
         sync: false
       - key: CRON_SECRET
         generateValue: true
-
-  - type: cron
-    name: vitalwatch-reminder-check
-    runtime: node
-    plan: free
-    schedule: "*/15 * * * *"
-    buildCommand: "true"
-    startCommand: 'curl -sf -H "Authorization: Bearer $CRON_SECRET" "$NEXT_PUBLIC_APP_URL/api/cron/check-reminders"'
-    envVars:
-      - key: NEXT_PUBLIC_APP_URL
-        sync: false
-      - key: CRON_SECRET
-        sync: false
