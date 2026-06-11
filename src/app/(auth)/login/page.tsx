@@ -46,6 +46,9 @@ export default function LoginPage() {
           <Field label="Password" error={error}>
             <PasswordInput value={pw} onChange={(e) => setPw(e.target.value)} placeholder="••••••••" error={!!error} />
           </Field>
+          <div className="flex justify-end -mt-2">
+            <Link href="/forgot-password" className="text-sm font-semibold text-brand hover:underline">Forgot password?</Link>
+          </div>
           <Button type="submit" size="lg" loading={loading} className="w-full justify-center">Sign In</Button>
         </form>
         <p className="mt-6 text-center text-sm text-slate-500">Don&apos;t have an account? <Link href="/register" className="font-semibold text-brand hover:underline">Create one</Link></p>

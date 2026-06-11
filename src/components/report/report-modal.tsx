@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/toast';
 import { PatientReport, type ReportLog } from '@/components/report/patient-report';
+import { emailPatientReport } from '@/lib/actions/report';
 import type { ReminderWithWeek } from '@/lib/medication';
 import type { ReportRange, ReportPreset } from '@/components/report/report-metrics';
 
@@ -34,8 +36,10 @@ interface ReportModalProps {
 }
 
 export function ReportModal({ open, onClose, logs, reminders, user, caregiverName, caregiverEmail }: ReportModalProps) {
+  const toast = useToast();
   const [range, setRange] = useState<ReportRange>({ preset: 'all', from: '', to: '' });
   const [mounted, setMounted] = useState(false);
+  const [emailing, setEmailing] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -73,6 +77,17 @@ export function ReportModal({ open, onClose, logs, reminders, user, caregiverNam
 
   const ctl = 'h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-[13px] font-medium text-slate-700 focus:border-brand focus:ring-2 focus:ring-brand/20';
 
+  const handleEmail = async () => {
+    setEmailing(true);
+    const result = await emailPatientReport(range);
+    setEmailing(false);
+    if (result.error) {
+      toast({ title: result.error, tone: 'error' });
+      return;
+    }
+    toast({ title: `Report sent to ${caregiverEmail}` });
+  };
+
   return createPortal(
     <div id="vw-report-overlay" className="fixed inset-0 z-[70] flex flex-col bg-slate-200/90 backdrop-blur-sm">
       <div className="vw-report-toolbar flex flex-wrap items-center gap-x-4 gap-y-2.5 border-b border-slate-300 bg-white px-4 sm:px-6 py-3 shadow-sm">
@@ -106,6 +121,7 @@ export function ReportModal({ open, onClose, logs, reminders, user, caregiverNam
         </div>
 
         <div className="order-2 ml-auto flex items-center gap-2 sm:order-3">
+          <Button variant="white" icon="mail" loading={emailing} onClick={handleEmail}><span className="hidden sm:inline">Email to caregiver</span></Button>
           <Button variant="primary" icon="download" onClick={() => window.print()}>Download PDF</Button>
           <Button variant="white" icon="x" onClick={onClose} className="px-3"><span className="hidden sm:inline">Close</span></Button>
         </div>
