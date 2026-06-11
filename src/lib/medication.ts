@@ -49,15 +49,20 @@ export function isDueToday(r: ReminderLite, now: Date = new Date()): boolean {
   return isDueOnDay(r, todayIdx(now));
 }
 
+// Whether a reminder had already been created as of a given weekday in the current week
+// (avoids treating days before a reminder existed as "missed").
+export function existedOnDay(r: { createdAt: Date }, dayIdx: number, now: Date = new Date()): boolean {
+  return weekdayDate(dayIdx, now) >= startOfDay(r.createdAt);
+}
+
 // 7-day adherence row (Mon..Sun) for a single reminder
 export function weekAdherenceStates(r: ReminderWithWeek, now: Date = new Date()): AdherenceState[] {
   const ti = todayIdx(now);
-  const createdDay = startOfDay(r.createdAt);
   return WEEK.map((_, i) => {
     const dose = r.weekDoses[i];
     if (dose?.takenAt) return 'taken';
     if (!r.active || !isDueOnDay(r, i)) return 'none';
-    if (weekdayDate(i, now) < createdDay) return 'none';
+    if (!existedOnDay(r, i, now)) return 'none';
     if (i < ti) return 'missed';
     if (i === ti) return 'pending';
     return 'none';
@@ -141,7 +146,7 @@ export function medicationAlerts(reminders: ReminderWithWeek[], now: Date = new 
     .forEach((r) => {
       for (let i = 0; i < ti; i++) {
         const dose = r.weekDoses[i];
-        if (!dose?.takenAt && isDueOnDay(r, i)) {
+        if (!dose?.takenAt && isDueOnDay(r, i) && existedOnDay(r, i, now)) {
           out.push({
             id: `mm-${r.id}-${i}`,
             reminderId: r.id,
@@ -300,7 +305,7 @@ export function buildNotifications(
     .forEach((r) => {
       for (let i = 0; i < ti; i++) {
         const dose = r.weekDoses[i];
-        if (!dose?.takenAt && isDueOnDay(r, i)) {
+        if (!dose?.takenAt && isDueOnDay(r, i) && existedOnDay(r, i, now)) {
           items.push({ id: `md-${r.id}-${i}`, type: 'missed', text: 'Missed dose', detail: `${r.name} ${r.dosage}`, ts: weekdayTs(i, now) });
         }
       }
