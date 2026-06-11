@@ -74,22 +74,22 @@ export function weekdayTs(i: number, date: Date = new Date()): string {
   return d.toISOString();
 }
 
-// Date-only (YYYY-MM-DD) for a weekday index (Mon=0) within the current week, in local time
+// Date-only (YYYY-MM-DD) for a weekday index (Mon=0) within the current week, in local time.
+// Returned as a UTC-midnight Date so it round-trips correctly through Postgres `@db.Date` columns
+// regardless of the server's timezone offset.
 export function weekdayDate(i: number, date: Date = new Date()): Date {
   const d = new Date(date);
   const jsDay = (d.getDay() + 6) % 7; // Mon=0 … Sun=6
   d.setDate(d.getDate() - (jsDay - i));
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }
 
+// Today's local calendar date as a UTC-midnight Date (see weekdayDate for why).
 export function startOfDay(date: Date = new Date()): Date {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
 }
 
 export function dateKey(d: Date | string): string {
   const date = new Date(d);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`;
 }
