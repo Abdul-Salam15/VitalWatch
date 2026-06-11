@@ -15,6 +15,10 @@ model User {
   email    String @unique
   password String
 
+  // Password reset
+  resetToken       String?   @unique
+  resetTokenExpiry DateTime?
+
   // Caregiver / notification settings
   caregiverName            String  @default("")
   caregiverEmail           String  @default("")
