@@ -70,31 +70,27 @@ VitalWatch is a personal health-monitoring web app built with **Next.js (App Rou
 
 ```mermaid
 graph TB
-    subgraph Browser["Browser"]
-        Pages["RSC pages: Dashboard, Log Health,\nReminders, Caregiver, Settings"]
-        Alarm["Alarm Manager\n(5s poll · Web Audio · Notification API)"]
-        Bell["Notifications Bell\n(localStorage read-state)"]
-    end
+    Pages[Browser: Dashboard, Log Health, Reminders, Caregiver, Settings]
+    Alarm[Browser: Alarm Manager, polls every 5 seconds]
+    Bell[Browser: Notifications Bell]
 
-    subgraph Server["Next.js App Router (server)"]
-        Actions["Server Actions — src/lib/actions/*\nauth · vitals · reminders · settings · report"]
-        API["API Routes — src/app/api/*\nauth/[...nextauth] · reminders/check\ncron/check-reminders · cron/daily-summary"]
-        Data["src/lib/data.ts\n(cached reads, per-request memoized)"]
-        Medication["src/lib/medication.ts\ndose state · adherence · alerts"]
-        AI["src/lib/ai.ts\nrule-based vitals analysis"]
-        Reminders["src/lib/reminders/check.ts\ncheckUserReminders (idempotent)"]
-        EmailLib["src/lib/email/*\nBrevo client + React Email templates"]
-        Prisma["Prisma Client — src/lib/db.ts"]
-    end
+    Actions[Server Actions: auth, vitals, reminders, settings, report]
+    API[API Routes: nextauth, reminders check, cron check-reminders, cron daily-summary]
+    Data[Data Layer: cached reads]
+    Medication[Medication Logic: dose state, adherence, alerts]
+    AI[AI Vitals Analysis]
+    Reminders[Reminder Check Logic: idempotent email sends]
+    EmailLib[Email Templates and Sender]
+    Prisma[Prisma Client]
 
-    DB[("PostgreSQL\nUser · VitalLog · Reminder · DoseRecord")]
-    Brevo["Brevo\n(transactional email API)"]
-    Schedulers["GitHub Actions /\nexternal cron pinger"]
+    DB[PostgreSQL: User, VitalLog, Reminder, DoseRecord]
+    Brevo[Brevo Transactional Email API]
+    Schedulers[GitHub Actions and external cron pinger]
 
-    Pages -- "calls" --> Actions
-    Pages -- "reads via" --> Data
-    Alarm -- "POST /api/reminders/check" --> API
-    Bell --- Pages
+    Pages --> Actions
+    Pages --> Data
+    Alarm --> API
+    Bell --> Pages
 
     Actions --> AI
     Actions --> Medication
@@ -112,7 +108,7 @@ graph TB
     Prisma --> DB
     EmailLib --> Brevo
 
-    Schedulers -- "GET /api/cron/check-reminders (~5 min)\nGET /api/cron/daily-summary (07:00 UTC)\nAuthorization: Bearer CRON_SECRET" --> API
+    Schedulers --> API
 ```
 
 **Key architectural choices:**
