@@ -14,13 +14,14 @@ import type { EmailPreviewDose } from '@/components/medication/email-preview-mod
 
 interface DoseRowProps {
   r: ReminderWithWeek;
+  now: Date;
   onPreview: (kind: 'patient' | 'caregiver', dose: EmailPreviewDose) => void;
 }
 
-export function DoseRow({ r, onPreview }: DoseRowProps) {
+export function DoseRow({ r, now, onPreview }: DoseRowProps) {
   const toast = useToast();
   const [pending, startTransition] = useTransition();
-  const st = doseState(r);
+  const st = doseState(r, now);
   const meta = DOSE_META[st.status];
   const t = TONES[meta.tone];
 

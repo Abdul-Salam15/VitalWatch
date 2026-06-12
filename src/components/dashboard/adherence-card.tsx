@@ -11,9 +11,9 @@ const LEGEND: [keyof typeof ADH, string][] = [
   ['none', 'No dose'],
 ];
 
-export function AdherenceCard({ reminders }: { reminders: ReminderWithWeek[] }) {
-  const pct = weekAdherencePct(reminders);
-  const states = combinedWeek(reminders);
+export function AdherenceCard({ reminders, now }: { reminders: ReminderWithWeek[]; now: Date }) {
+  const pct = weekAdherencePct(reminders, now);
+  const states = combinedWeek(reminders, now);
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between">

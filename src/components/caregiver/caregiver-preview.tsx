@@ -22,13 +22,14 @@ export interface CaregiverLog extends VitalLogLite, AISummaryLog {
 interface CaregiverPreviewProps {
   logs: CaregiverLog[];
   reminders: ReminderWithWeek[];
+  now: Date;
   user: { name: string; email: string };
   caregiverName: string;
   caregiverEmail: string;
 }
 
-export function CaregiverPreview({ logs, reminders, user, caregiverName, caregiverEmail }: CaregiverPreviewProps) {
-  const alerts = caregiverAlerts(logs, reminders);
+export function CaregiverPreview({ logs, reminders, now, user, caregiverName, caregiverEmail }: CaregiverPreviewProps) {
+  const alerts = caregiverAlerts(logs, reminders, now);
   const [mail, setMail] = useState<EmailPreviewDose | null>(null);
   const medCount = alerts.filter((a) => a.kind === 'med').length;
 
@@ -56,7 +57,7 @@ export function CaregiverPreview({ logs, reminders, user, caregiverName, caregiv
 
         <HealthTrends logs={logs} />
 
-        <div className="pointer-events-none"><CaregiverMeds reminders={reminders} /></div>
+        <div className="pointer-events-none"><CaregiverMeds reminders={reminders} now={now} /></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {logs[0] && <div className="pointer-events-none"><AISummaryCard latest={logs[0]} /></div>}

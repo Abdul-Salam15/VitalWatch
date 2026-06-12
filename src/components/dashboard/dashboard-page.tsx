@@ -17,12 +17,13 @@ import type { ReminderWithWeek } from '@/lib/medication';
 interface DashboardPageProps {
   logs: ReportLog[];
   reminders: ReminderWithWeek[];
+  now: Date;
   user: { name: string; email: string };
   caregiverName: string;
   caregiverEmail: string;
 }
 
-export function DashboardPage({ logs, reminders, user, caregiverName, caregiverEmail }: DashboardPageProps) {
+export function DashboardPage({ logs, reminders, now, user, caregiverName, caregiverEmail }: DashboardPageProps) {
   const router = useRouter();
   const [report, setReport] = useState(false);
 
@@ -48,7 +49,7 @@ export function DashboardPage({ logs, reminders, user, caregiverName, caregiverE
         </div>
       </div>
 
-      <MedReminderBanner reminders={reminders} user={user} caregiverName={caregiverName} caregiverEmail={caregiverEmail} />
+      <MedReminderBanner reminders={reminders} now={now} user={user} caregiverName={caregiverName} caregiverEmail={caregiverEmail} />
 
       <StatGrid logs={logs} />
 
@@ -57,7 +58,7 @@ export function DashboardPage({ logs, reminders, user, caregiverName, caregiverE
         <div className="lg:col-span-2 min-w-0"><AISummaryCard latest={logs[0]} /></div>
       </div>
 
-      <AdherenceCard reminders={reminders} />
+      <AdherenceCard reminders={reminders} now={now} />
 
       <ReportModal open={report} onClose={() => setReport(false)} logs={logs} reminders={reminders} user={user} caregiverName={caregiverName} caregiverEmail={caregiverEmail} />
     </div>

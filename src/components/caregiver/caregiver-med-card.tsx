@@ -8,11 +8,12 @@ import { ADH } from '@/components/dashboard/adherence-week';
 
 interface CaregiverMedCardProps {
   r: ReminderWithWeek;
+  now: Date;
 }
 
-export function CaregiverMedCard({ r }: CaregiverMedCardProps) {
-  const st = doseState(r);
-  const states = weekAdherenceStates(r);
+export function CaregiverMedCard({ r, now }: CaregiverMedCardProps) {
+  const st = doseState(r, now);
+  const states = weekAdherenceStates(r, now);
   const due = states.filter((s) => s === 'taken' || s === 'missed').length;
   const taken = states.filter((s) => s === 'taken').length;
   const rate = due ? Math.round((taken / due) * 100) : 0;

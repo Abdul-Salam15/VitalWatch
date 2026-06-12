@@ -7,9 +7,10 @@ import { weekAdherenceStates, type ReminderWithWeek } from '@/lib/medication';
 
 interface AdherenceTableProps {
   reminders: ReminderWithWeek[];
+  now: Date;
 }
 
-export function AdherenceTable({ reminders }: AdherenceTableProps) {
+export function AdherenceTable({ reminders, now }: AdherenceTableProps) {
   if (!reminders.length) return null;
   return (
     <Card className="p-6 overflow-hidden">
@@ -25,7 +26,7 @@ export function AdherenceTable({ reminders }: AdherenceTableProps) {
           </thead>
           <tbody>
             {reminders.map((r) => {
-              const states = weekAdherenceStates(r);
+              const states = weekAdherenceStates(r, now);
               const due = states.filter((s) => s === 'taken' || s === 'missed').length;
               const taken = states.filter((s) => s === 'taken').length;
               const rate = due ? Math.round((taken / due) * 100) : 0;
