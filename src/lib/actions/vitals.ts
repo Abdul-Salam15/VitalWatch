@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { aiProvider } from '@/lib/ai';
+import { anomalyReason } from '@/lib/medication';
+import { sendCaregiverVitalAlertEmail } from '@/lib/email/send';
 
 const logSchema = z.object({
   hr: z.coerce.number().min(20).max(250),
@@ -34,7 +36,7 @@ export async function addVitalLog(_prev: AddLogResult | undefined, formData: For
 
   const { summary, anomalyFlag, recommendations } = aiProvider.analyzeVitals(parsed.data);
 
-  await prisma.vitalLog.create({
+  const log = await prisma.vitalLog.create({
     data: {
       userId: session.user.id,
       hr: parsed.data.hr,
@@ -45,6 +47,26 @@ export async function addVitalLog(_prev: AddLogResult | undefined, formData: For
       anomalyFlag,
     },
   });
+
+  if (anomalyFlag) {
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    if (user?.notifCaregiverAnomaly && user.caregiverEmail) {
+      try {
+        await sendCaregiverVitalAlertEmail({
+          to: user.caregiverEmail,
+          patientName: user.name,
+          caregiverName: user.caregiverName || 'a designated caregiver',
+          reason: anomalyReason(parsed.data),
+          hr: parsed.data.hr,
+          spo2: parsed.data.spo2,
+          temp: parsed.data.temp,
+          ts: log.ts,
+        });
+      } catch (err) {
+        console.error('[vitals] failed to send caregiver anomaly alert:', err);
+      }
+    }
+  }
 
   revalidatePath('/dashboard');
   revalidatePath('/log-health');

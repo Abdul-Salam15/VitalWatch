@@ -1,0 +1,16 @@
+name: Daily health summary
+
+on:
+  schedule:
+    # 7:00 AM UTC daily
+    - cron: '0 7 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call daily-summary endpoint
+        run: |
+          curl -sf -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "${{ secrets.APP_URL }}/api/cron/daily-summary"
