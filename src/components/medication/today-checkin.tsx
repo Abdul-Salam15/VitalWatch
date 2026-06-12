@@ -11,17 +11,17 @@ import { EmailPreviewModal, type EmailPreviewDose } from '@/components/medicatio
 
 interface TodayCheckInProps {
   reminders: ReminderWithWeek[];
+  now: Date;
   user: { name: string; email: string };
   caregiverName: string;
   caregiverEmail: string;
 }
 
-export function TodayCheckIn({ reminders, user, caregiverName, caregiverEmail }: TodayCheckInProps) {
+export function TodayCheckIn({ reminders, now, user, caregiverName, caregiverEmail }: TodayCheckInProps) {
   const [mail, setMail] = useState<{ kind: 'patient' | 'caregiver'; dose: EmailPreviewDose } | null>(null);
-  const due = reminders.filter((r) => isDueToday(r));
-  const taken = due.filter((r) => doseState(r).status === 'taken').length;
-  const today = new Date();
-  const dateLbl = `${DAYS[today.getDay()]}, ${MONTHS[today.getMonth()]} ${today.getDate()}`;
+  const due = reminders.filter((r) => isDueToday(r, now));
+  const taken = due.filter((r) => doseState(r, now).status === 'taken').length;
+  const dateLbl = `${DAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
 
   const preview = (kind: 'patient' | 'caregiver', dose: EmailPreviewDose) => setMail({ kind, dose });
 
@@ -45,7 +45,7 @@ export function TodayCheckIn({ reminders, user, caregiverName, caregiverEmail }:
         </div>
       ) : (
         <div className="mt-4 space-y-2.5">
-          {due.map((r) => <DoseRow key={r.id} r={r} onPreview={preview} />)}
+          {due.map((r) => <DoseRow key={r.id} r={r} now={now} onPreview={preview} />)}
         </div>
       )}
 

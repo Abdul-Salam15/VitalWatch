@@ -13,16 +13,17 @@ import { EmailPreviewModal, type EmailPreviewDose } from '@/components/medicatio
 
 interface MedReminderBannerProps {
   reminders: ReminderWithWeek[];
+  now: Date;
   user: { name: string; email: string };
   caregiverName: string;
   caregiverEmail: string;
 }
 
-export function MedReminderBanner({ reminders, user, caregiverName, caregiverEmail }: MedReminderBannerProps) {
+export function MedReminderBanner({ reminders, now, user, caregiverName, caregiverEmail }: MedReminderBannerProps) {
   const toast = useToast();
   const [pending, startTransition] = useTransition();
   const [mail, setMail] = useState<{ kind: 'patient' | 'caregiver'; dose: EmailPreviewDose } | null>(null);
-  const overdue = patientReminders(reminders);
+  const overdue = patientReminders(reminders, now);
   if (overdue.length === 0) return null;
   const escalated = overdue.some((x) => x.st.status === 'escalated');
 

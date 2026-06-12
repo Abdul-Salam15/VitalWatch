@@ -13,12 +13,13 @@ import type { ReminderWithWeek } from '@/lib/medication';
 
 interface RemindersPageProps {
   reminders: ReminderWithWeek[];
+  now: Date;
   user: { name: string; email: string };
   caregiverName: string;
   caregiverEmail: string;
 }
 
-export function RemindersPage({ reminders, user, caregiverName, caregiverEmail }: RemindersPageProps) {
+export function RemindersPage({ reminders, now, user, caregiverName, caregiverEmail }: RemindersPageProps) {
   const [add, setAdd] = useState(false);
   const activeCount = reminders.filter((r) => r.active).length;
 
@@ -29,7 +30,7 @@ export function RemindersPage({ reminders, user, caregiverName, caregiverEmail }
         <Button icon="plus" onClick={() => setAdd(true)}>Add Reminder</Button>
       </div>
 
-      {reminders.length > 0 && <TodayCheckIn reminders={reminders} user={user} caregiverName={caregiverName} caregiverEmail={caregiverEmail} />}
+      {reminders.length > 0 && <TodayCheckIn reminders={reminders} now={now} user={user} caregiverName={caregiverName} caregiverEmail={caregiverEmail} />}
 
       {reminders.length === 0 ? (
         <Card>
@@ -39,9 +40,9 @@ export function RemindersPage({ reminders, user, caregiverName, caregiverEmail }
       ) : (
         <>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 vw-stagger">
-            {reminders.map((r) => <ReminderCard key={r.id} r={r} />)}
+            {reminders.map((r) => <ReminderCard key={r.id} r={r} now={now} />)}
           </div>
-          <AdherenceTable reminders={reminders} />
+          <AdherenceTable reminders={reminders} now={now} />
         </>
       )}
 

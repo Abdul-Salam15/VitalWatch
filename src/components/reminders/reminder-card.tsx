@@ -15,13 +15,14 @@ import { ReminderDialog } from '@/components/reminders/reminder-dialog';
 
 interface ReminderCardProps {
   r: ReminderWithWeek;
+  now: Date;
 }
 
-export function ReminderCard({ r }: ReminderCardProps) {
+export function ReminderCard({ r, now }: ReminderCardProps) {
   const toast = useToast();
   const [edit, setEdit] = useState(false);
   const [pending, startTransition] = useTransition();
-  const states = weekAdherenceStates(r);
+  const states = weekAdherenceStates(r, now);
 
   const onToggle = () => startTransition(async () => {
     await toggleReminder(r.id);
