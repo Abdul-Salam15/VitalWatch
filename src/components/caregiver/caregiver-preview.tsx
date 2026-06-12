@@ -9,6 +9,7 @@ import { Icon } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/avatar';
 import { StatGrid, type VitalLogLite } from '@/components/dashboard/stat-card';
 import { AISummaryCard, type AISummaryLog } from '@/components/dashboard/ai-summary-card';
+import { HealthTrends } from '@/components/dashboard/health-trends';
 import { CaregiverMeds } from '@/components/caregiver/caregiver-meds';
 import { EmailPreviewModal, type EmailPreviewDose } from '@/components/medication/email-preview-modal';
 import { caregiverAlerts, type ReminderWithWeek } from '@/lib/medication';
@@ -52,6 +53,8 @@ export function CaregiverPreview({ logs, reminders, user, caregiverName, caregiv
         </div>
 
         <div className="pointer-events-none select-none"><StatGrid logs={logs} readOnly /></div>
+
+        <HealthTrends logs={logs} />
 
         <div className="pointer-events-none"><CaregiverMeds reminders={reminders} /></div>
 
