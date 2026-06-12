@@ -238,6 +238,8 @@ export function caregiverAlerts(
   now: Date = new Date(),
 ): CaregiverAlert[] {
   const vitals: CaregiverAlert[] = anomalyAlerts(logs).map((a) => ({ ...a, kind: 'vital', emailed: false }));
+  const ti = todayIdx(now);
+  const remindersById = new Map(reminders.map((r) => [r.id, r]));
   const meds: CaregiverAlert[] = medicationAlerts(reminders, now)
     .filter((m) => m.escalated)
     .map((m) => ({
@@ -246,7 +248,10 @@ export function caregiverAlerts(
       reason: m.reason,
       detail: m.detail,
       kind: 'med',
-      emailed: true,
+      // Today's "escalated" alert reflects real-time dose state, but the actual
+      // email is sent asynchronously by the reminder cron job — only report
+      // `emailed: true` once that job has recorded escalationEmailSentAt.
+      emailed: m.type === 'missed' ? true : !!remindersById.get(m.reminderId)?.weekDoses[ti]?.escalationEmailSentAt,
       name: m.name,
       dosage: m.dosage,
       time: m.time,

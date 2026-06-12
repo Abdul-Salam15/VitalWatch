@@ -5,7 +5,7 @@ import { cx } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { TONES } from '@/lib/vitals';
-import { fmtTime12 } from '@/lib/dates';
+import { fmtTime12, todayIdx } from '@/lib/dates';
 import { doseState, type ReminderWithWeek } from '@/lib/medication';
 import { checkInDose, undoDose } from '@/lib/actions/reminders';
 import { useToast } from '@/components/ui/toast';
@@ -24,6 +24,9 @@ export function DoseRow({ r, now, onPreview }: DoseRowProps) {
   const st = doseState(r, now);
   const meta = DOSE_META[st.status];
   const t = TONES[meta.tone];
+  const today = r.weekDoses[todayIdx(now)];
+  const caregiverEmailed = !!today?.escalationEmailSentAt;
+  const reminderEmailed = !!today?.reminderEmailSentAt;
 
   const take = () => startTransition(async () => {
     await checkInDose(r.id);
@@ -56,7 +59,9 @@ export function DoseRow({ r, now, onPreview }: DoseRowProps) {
             className="mt-1.5 inline-flex items-center gap-1.5 text-[12px] font-semibold text-brand hover:underline underline-offset-2"
           >
             <Icon name={st.status === 'escalated' ? 'mail-check' : 'mail'} size={13} />
-            {st.status === 'escalated' ? 'Caregiver emailed · view' : 'Reminder emailed to you · view'}
+            {st.status === 'escalated'
+              ? caregiverEmailed ? 'Caregiver emailed · view' : 'Caregiver will be emailed soon · view'
+              : reminderEmailed ? 'Reminder emailed to you · view' : 'Reminder will be emailed soon · view'}
           </button>
         )}
       </div>

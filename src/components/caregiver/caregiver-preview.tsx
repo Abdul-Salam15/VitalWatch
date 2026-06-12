@@ -76,7 +76,7 @@ export function CaregiverPreview({ logs, reminders, now, user, caregiverName, ca
                       {isMed && (
                         <button onClick={() => setMail({ name: a.name!, dosage: a.dosage!, time: a.time!, escalation: a.escalation })}
                           className="mt-0.5 inline-flex items-center gap-1 text-[12px] font-semibold text-rose-600 hover:underline underline-offset-2">
-                          <Icon name="mail-check" size={12} />Caregiver emailed · view
+                          <Icon name="mail-check" size={12} />{a.emailed ? 'Caregiver emailed · view' : 'Caregiver will be emailed soon · view'}
                         </button>
                       )}
                     </div>
