@@ -4,9 +4,8 @@ import { useState, useTransition } from 'react';
 import { Card } from '@/components/ui/card';
 import { SectionTitle } from '@/components/ui/section-title';
 import { Toggle } from '@/components/ui/toggle';
-import { updateNotification, NOTIF_FIELDS } from '@/lib/actions/settings';
-
-type NotifKey = (typeof NOTIF_FIELDS)[number];
+import { updateNotification } from '@/lib/actions/settings';
+import type { NotifKey } from '@/lib/notification-fields';
 
 interface NotificationsSectionProps {
   notif: Record<NotifKey, boolean>;
