@@ -18,7 +18,8 @@ export function AccessCard({ accessToken, caregiverEmail }: AccessCardProps) {
   const toast = useToast();
   const [token, setToken] = useState(accessToken);
   const [pending, startTransition] = useTransition();
-  const url = `https://vitalwatch.app/caregiver/${token}`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const url = `${appUrl}/caregiver/${token}`;
 
   const copy = () => {
     navigator.clipboard?.writeText(url).catch(() => {});
