@@ -22,11 +22,13 @@ interface EmailLayoutProps {
   heading: string;
   lead: string;
   rows?: EmailRow[];
+  list?: string[];
+  listTitle?: string;
   cta?: { label: string; url: string };
   footnote?: string;
 }
 
-export function EmailLayout({ previewText, accent = 'brand', badge, badgeTone = 'green', heading, lead, rows, cta, footnote }: EmailLayoutProps) {
+export function EmailLayout({ previewText, accent = 'brand', badge, badgeTone = 'green', heading, lead, rows, list, listTitle, cta, footnote }: EmailLayoutProps) {
   const accentColor = accent === 'rose' ? ROSE : BRAND;
   const tone = TONE_COLORS[badgeTone] || TONE_COLORS.green;
 
@@ -61,6 +63,17 @@ export function EmailLayout({ previewText, accent = 'brand', badge, badgeTone = 
                       </tbody>
                     </table>
                   </Section>
+                ))}
+              </Section>
+            )}
+
+            {list && list.length > 0 && (
+              <Section style={{ border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 16px', margin: '0 0 16px' }}>
+                {listTitle && (
+                  <Text style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em', margin: '0 0 6px' }}>{listTitle}</Text>
+                )}
+                {list.map((item, i) => (
+                  <Text key={i} style={{ fontSize: 14, lineHeight: '22px', color: '#475569', margin: '4px 0' }}>• {item}</Text>
                 ))}
               </Section>
             )}

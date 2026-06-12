@@ -2,6 +2,8 @@ import { render } from '@react-email/render';
 import { sendEmail } from '@/lib/email/brevo';
 import { MedicationReminderEmail } from '@/components/emails/medication-reminder';
 import { CaregiverAlertEmail } from '@/components/emails/caregiver-alert';
+import { CaregiverVitalAlertEmail } from '@/components/emails/caregiver-vital-alert';
+import { DailySummaryEmail } from '@/components/emails/daily-summary';
 import { PasswordResetEmail } from '@/components/emails/password-reset';
 import { CaregiverReportEmail } from '@/components/emails/caregiver-report';
 
@@ -55,6 +57,66 @@ export async function sendCaregiverAlertEmail(opts: {
     to: opts.to,
     toName: opts.caregiverName,
     subject: `⚠️ Missed medication alert — ${opts.patientName}`,
+    html,
+  });
+}
+
+export async function sendCaregiverVitalAlertEmail(opts: {
+  to: string;
+  patientName: string;
+  caregiverName: string;
+  reason: string;
+  hr: number;
+  spo2: number;
+  temp: number;
+  ts: Date;
+}) {
+  const html = await render(CaregiverVitalAlertEmail({
+    patientName: opts.patientName,
+    caregiverName: opts.caregiverName,
+    reason: opts.reason,
+    hr: opts.hr,
+    spo2: opts.spo2,
+    temp: opts.temp,
+    ts: opts.ts,
+    appUrl: APP_URL,
+  }));
+
+  return sendEmail({
+    to: opts.to,
+    toName: opts.caregiverName,
+    subject: `⚠️ Vital sign alert — ${opts.patientName}`,
+    html,
+  });
+}
+
+export async function sendDailySummaryEmail(opts: {
+  to: string;
+  name: string;
+  summary: string;
+  recommendations: string[];
+  hr: number;
+  spo2: number;
+  temp: number;
+  steps: number;
+  anomalyFlag: boolean;
+}) {
+  const html = await render(DailySummaryEmail({
+    name: opts.name,
+    summary: opts.summary,
+    recommendations: opts.recommendations,
+    hr: opts.hr,
+    spo2: opts.spo2,
+    temp: opts.temp,
+    steps: opts.steps,
+    anomalyFlag: opts.anomalyFlag,
+    appUrl: APP_URL,
+  }));
+
+  return sendEmail({
+    to: opts.to,
+    toName: opts.name,
+    subject: 'Your daily VitalWatch health summary',
     html,
   });
 }
