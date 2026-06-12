@@ -1,14 +1,12 @@
-import { EmailLayout, type EmailRow } from '@/components/emails/layout';
+import { EmailLayout } from '@/components/emails/layout';
 
 export interface CaregiverReportEmailProps {
   patientName: string;
   caregiverName: string;
   periodLabel: string;
-  rows: EmailRow[];
-  appUrl: string;
 }
 
-export function CaregiverReportEmail({ patientName, caregiverName, periodLabel, rows, appUrl }: CaregiverReportEmailProps) {
+export function CaregiverReportEmail({ patientName, caregiverName, periodLabel }: CaregiverReportEmailProps) {
   const first = (caregiverName || '').split(' ')[0];
   return (
     <EmailLayout
@@ -16,10 +14,8 @@ export function CaregiverReportEmail({ patientName, caregiverName, periodLabel, 
       accent="brand"
       badge="Health report"
       badgeTone="green"
-      heading={`${patientName}'s health summary`}
-      lead={`Hi ${first || 'there'}, here is a summary of ${patientName}'s health and medication activity for ${periodLabel}.`}
-      rows={rows}
-      cta={{ label: 'View full report', url: `${appUrl}/caregiver` }}
+      heading={`${patientName}'s health report`}
+      lead={`Hi ${first || 'there'}, attached is ${patientName}'s full health report (PDF) for ${periodLabel}. Download it to view vitals, medication adherence, and flagged anomalies.`}
       footnote={`You are receiving this because you are listed as ${patientName}'s caregiver on VitalWatch.`}
     />
   );
