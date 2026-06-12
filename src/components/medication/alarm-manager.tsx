@@ -13,7 +13,7 @@ interface AlarmManagerProps {
 }
 
 const STORAGE_KEY = 'vw.alarmedDoses';
-const TICK_MS = 30_000;
+const TICK_MS = 15_000;
 const SNOOZE_MS = 5 * 60 * 1000;
 
 function loadAlarmed(): Set<string> {
@@ -58,6 +58,7 @@ export function AlarmManager({ reminders, notifBrowser }: AlarmManagerProps) {
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const snoozeRef = useRef<Map<string, number>>(new Map());
+  const statusRef = useRef<Map<string, string>>(new Map());
 
   // Unlock the AudioContext on the user's first interaction — required by
   // browser autoplay policies before any sound can play.
@@ -93,6 +94,20 @@ export function AlarmManager({ reminders, notifBrowser }: AlarmManagerProps) {
     const now = new Date();
     const today = dateKey(now);
     const alarmed = loadAlarmed();
+
+    // Dose statuses (upcoming/late/escalated/taken) are computed at render
+    // time on the server, so a stale page won't reflect a status change
+    // (e.g. "Upcoming" -> "Late") until something re-renders it. Detect
+    // transitions client-side and refresh server components to pick them up.
+    let statusChanged = false;
+    for (const r of reminders) {
+      if (!r.active) continue;
+      const status = doseState(r, now).status;
+      const prev = statusRef.current.get(r.id);
+      if (prev !== undefined && prev !== status) statusChanged = true;
+      statusRef.current.set(r.id, status);
+    }
+    if (statusChanged) router.refresh();
 
     const due = reminders.filter((r) => {
       if (!r.active) return false;
@@ -131,7 +146,7 @@ export function AlarmManager({ reminders, notifBrowser }: AlarmManagerProps) {
 
       return [...prev, ...additions.map((r) => ({ id: r.id, name: r.name, dosage: r.dosage, time: r.time }))];
     });
-  }, [reminders, notifBrowser]);
+  }, [reminders, notifBrowser, router]);
 
   useEffect(() => {
     tick();
