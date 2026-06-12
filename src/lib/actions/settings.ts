@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { NOTIF_FIELDS, type NotifKey } from '@/lib/notification-fields';
 
 async function requireUserId(): Promise<string> {
   const session = await auth();
@@ -53,15 +54,7 @@ export async function updateCaregiver(_prev: ActionResult | undefined, formData:
   return { success: true };
 }
 
-export const NOTIF_FIELDS = [
-  'notifBrowser',
-  'notifMedReminderEmail',
-  'notifEmailSummary',
-  'notifCaregiverMissedDose',
-  'notifCaregiverAnomaly',
-] as const;
-
-export async function updateNotification(key: (typeof NOTIF_FIELDS)[number], value: boolean) {
+export async function updateNotification(key: NotifKey, value: boolean) {
   const userId = await requireUserId();
   if (!NOTIF_FIELDS.includes(key)) throw new Error('Invalid setting');
 
