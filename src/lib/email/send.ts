@@ -4,7 +4,6 @@ import { MedicationReminderEmail } from '@/components/emails/medication-reminder
 import { CaregiverAlertEmail } from '@/components/emails/caregiver-alert';
 import { PasswordResetEmail } from '@/components/emails/password-reset';
 import { CaregiverReportEmail } from '@/components/emails/caregiver-report';
-import type { EmailRow } from '@/components/emails/layout';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -84,14 +83,13 @@ export async function sendCaregiverReportEmail(opts: {
   patientName: string;
   caregiverName: string;
   periodLabel: string;
-  rows: EmailRow[];
+  pdfBuffer: Buffer;
+  pdfFilename: string;
 }) {
   const html = await render(CaregiverReportEmail({
     patientName: opts.patientName,
     caregiverName: opts.caregiverName,
     periodLabel: opts.periodLabel,
-    rows: opts.rows,
-    appUrl: APP_URL,
   }));
 
   return sendEmail({
@@ -99,5 +97,6 @@ export async function sendCaregiverReportEmail(opts: {
     toName: opts.caregiverName,
     subject: `${opts.patientName}'s health report — ${opts.periodLabel}`,
     html,
+    attachment: [{ content: opts.pdfBuffer.toString('base64'), name: opts.pdfFilename }],
   });
 }
