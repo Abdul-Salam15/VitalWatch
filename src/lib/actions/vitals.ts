@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { aiProvider } from '@/lib/ai';
 import { anomalyReason } from '@/lib/medication';
 import { sendCaregiverVitalAlertEmail } from '@/lib/email/send';
+import { dateKey, zonedDate } from '@/lib/dates';
 
 const logSchema = z.object({
   hr: z.coerce.number().min(20).max(250),
@@ -34,6 +35,26 @@ export async function addVitalLog(_prev: AddLogResult | undefined, formData: For
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message || 'Invalid input' };
 
+  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!user) return { error: 'Unauthorized' };
+
+  // Steps are a cumulative daily total (like a pedometer reading), so a new
+  // entry for today can't be lower than one already logged today.
+  const todayKey = dateKey(zonedDate(user.timezone));
+  const todaysLogs = await prisma.vitalLog.findMany({
+    where: { userId: user.id },
+    orderBy: { ts: 'desc' },
+    take: 10,
+    select: { ts: true, steps: true },
+  });
+  const maxStepsToday = todaysLogs
+    .filter((l) => dateKey(zonedDate(user.timezone, l.ts)) === todayKey)
+    .reduce((max, l) => Math.max(max, l.steps), 0);
+
+  if (parsed.data.steps < maxStepsToday) {
+    return { error: `Steps can't be lower than today's earlier reading of ${maxStepsToday.toLocaleString()}.` };
+  }
+
   const { summary, anomalyFlag, recommendations } = aiProvider.analyzeVitals(parsed.data);
 
   const log = await prisma.vitalLog.create({
@@ -49,8 +70,7 @@ export async function addVitalLog(_prev: AddLogResult | undefined, formData: For
   });
 
   if (anomalyFlag) {
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-    if (user?.notifCaregiverAnomaly && user.caregiverEmail) {
+    if (user.notifCaregiverAnomaly && user.caregiverEmail) {
       try {
         await sendCaregiverVitalAlertEmail({
           to: user.caregiverEmail,

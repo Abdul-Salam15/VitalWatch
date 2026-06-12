@@ -51,7 +51,7 @@ export function DashboardPage({ logs, reminders, now, user, caregiverName, careg
 
       <MedReminderBanner reminders={reminders} now={now} user={user} caregiverName={caregiverName} caregiverEmail={caregiverEmail} />
 
-      <StatGrid logs={logs} />
+      <StatGrid logs={logs} now={now} />
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 md:gap-6">
         <div className="lg:col-span-3 min-w-0"><HealthTrends logs={logs} /></div>

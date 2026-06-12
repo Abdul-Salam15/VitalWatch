@@ -53,7 +53,7 @@ export function CaregiverPreview({ logs, reminders, now, user, caregiverName, ca
           <Badge tone="green" dot>Monitoring</Badge>
         </div>
 
-        <div className="pointer-events-none select-none"><StatGrid logs={logs} readOnly /></div>
+        <div className="pointer-events-none select-none"><StatGrid logs={logs} now={now} readOnly /></div>
 
         <HealthTrends logs={logs} />
 
