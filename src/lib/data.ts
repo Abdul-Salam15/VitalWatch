@@ -13,6 +13,11 @@ export const getCurrentUser = cache(async () => {
   return prisma.user.findUnique({ where: { id: session.user.id } });
 });
 
+// Used by the public, unauthenticated caregiver share-link page.
+export async function getUserByAccessToken(token: string) {
+  return prisma.user.findUnique({ where: { accessToken: token } });
+}
+
 export const getRemindersWithWeek = cache(async (userId: string, now: Date = new Date()): Promise<ReminderWithWeek[]> => {
   const reminders = await prisma.reminder.findMany({
     where: { userId },
