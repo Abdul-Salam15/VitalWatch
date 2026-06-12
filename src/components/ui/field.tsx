@@ -27,7 +27,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
 }
 
-export function Input({ unit, error, className = '', leftIcon, ...rest }: InputProps) {
+export function Input({ unit, error, className = '', leftIcon, onWheel, ...rest }: InputProps) {
   return (
     <div className="relative">
       {leftIcon && <Icon name={leftIcon} size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />}
@@ -39,6 +39,12 @@ export function Input({ unit, error, className = '', leftIcon, ...rest }: InputP
           error ? 'border-rose-300 focus:ring-2 focus:ring-rose-500/30 focus:border-rose-400' : 'border-slate-300 focus:ring-2 focus:ring-brand/25 focus:border-brand',
           className,
         )}
+        onWheel={(e) => {
+          // Prevent the browser's default behavior of nudging a focused
+          // number input's value by `step` when the page is scrolled.
+          if (e.currentTarget.type === 'number') e.currentTarget.blur();
+          onWheel?.(e);
+        }}
         {...rest}
       />
       {unit && <span className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-500">{unit}</span>}
