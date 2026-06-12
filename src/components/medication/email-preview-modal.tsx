@@ -125,7 +125,7 @@ export function EmailPreviewModal({ open, onClose, kind, dose, user, caregiverNa
       footer={<Button icon="check" onClick={onClose}>Close preview</Button>}
     >
       {isCaregiver ? (
-        <EmailChrome from="VitalWatch Alerts" fromAddr="alerts@vitalwatch.app" to={caregiverTo} subject={`⚠️ Missed medication alert — ${user.name}`}>
+        <EmailChrome from="VitalWatch" fromAddr="onboarding@vitalwatch.app" to={caregiverTo} subject={`⚠️ Missed medication alert — ${user.name}`}>
           <EmailBody
             accent="rose"
             badge="Escalation alert"
@@ -143,7 +143,7 @@ export function EmailPreviewModal({ open, onClose, kind, dose, user, caregiverNa
           />
         </EmailChrome>
       ) : (
-        <EmailChrome from="VitalWatch" fromAddr="reminders@vitalwatch.app" to={`${user.name} <${user.email}>`} subject={`⏰ Time for your ${dose.name}`}>
+        <EmailChrome from="VitalWatch" fromAddr="onboarding@vitalwatch.app" to={`${user.name} <${user.email}>`} subject={`⏰ Time for your ${dose.name}`}>
           <EmailBody
             accent="brand"
             badge="Medication reminder"
