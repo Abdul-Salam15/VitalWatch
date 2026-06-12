@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getRemindersWithWeek } from '@/lib/data';
 import { doseState } from '@/lib/medication';
-import { startOfDay, todayIdx } from '@/lib/dates';
+import { startOfDay, todayIdx, zonedDate } from '@/lib/dates';
 import { sendMedicationReminderEmail, sendCaregiverAlertEmail } from '@/lib/email/send';
 
 export const dynamic = 'force-dynamic';
@@ -16,9 +16,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const now = new Date();
-  const date = startOfDay(now);
-  const ti = todayIdx(now);
+  const realNow = new Date();
 
   const users = await prisma.user.findMany({
     where: { reminders: { some: { active: true } } },
@@ -28,6 +26,12 @@ export async function GET(req: NextRequest) {
   let escalationsSent = 0;
 
   for (const user of users) {
+    // Evaluate "due" times in the user's own timezone, not the server's —
+    // a reminder set for "09:11" means 09:11 local to the user.
+    const now = zonedDate(user.timezone, realNow);
+    const date = startOfDay(now);
+    const ti = todayIdx(now);
+
     const reminders = await getRemindersWithWeek(user.id, now);
 
     for (const r of reminders) {
@@ -50,8 +54,8 @@ export async function GET(req: NextRequest) {
           });
           await prisma.doseRecord.upsert({
             where: { reminderId_date: { reminderId: r.id, date } },
-            update: { reminderEmailSentAt: now },
-            create: { reminderId: r.id, date, reminderEmailSentAt: now },
+            update: { reminderEmailSentAt: realNow },
+            create: { reminderId: r.id, date, reminderEmailSentAt: realNow },
           });
           remindersSent++;
         } catch (err) {
@@ -72,8 +76,8 @@ export async function GET(req: NextRequest) {
           });
           await prisma.doseRecord.upsert({
             where: { reminderId_date: { reminderId: r.id, date } },
-            update: { escalationEmailSentAt: now },
-            create: { reminderId: r.id, date, escalationEmailSentAt: now },
+            update: { escalationEmailSentAt: realNow },
+            create: { reminderId: r.id, date, escalationEmailSentAt: realNow },
           });
           escalationsSent++;
         } catch (err) {

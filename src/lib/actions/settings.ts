@@ -75,6 +75,21 @@ export async function updateCaregiver(_prev: ActionResult | undefined, formData:
   return { success: true };
 }
 
+// IANA timezone strings only ever contain letters, digits, '/', '_', '+' and '-'
+// (e.g. "Africa/Lagos", "America/New_York", "Etc/GMT+1").
+const TZ_REGEX = /^[A-Za-z0-9_/+-]{1,64}$/;
+
+export async function updateTimezone(timezone: string) {
+  const userId = await requireUserId();
+  if (!TZ_REGEX.test(timezone)) return;
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: timezone });
+  } catch {
+    return;
+  }
+  await prisma.user.update({ where: { id: userId }, data: { timezone } });
+}
+
 export async function updateNotification(key: NotifKey, value: boolean) {
   const userId = await requireUserId();
   if (!NOTIF_FIELDS.includes(key)) throw new Error('Invalid setting');

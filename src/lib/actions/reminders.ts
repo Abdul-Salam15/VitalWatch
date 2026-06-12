@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { startOfDay } from '@/lib/dates';
+import { startOfDay, zonedDate } from '@/lib/dates';
 
 const reminderSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(100),
@@ -103,10 +103,13 @@ export async function toggleReminder(id: string) {
 
 export async function checkInDose(reminderId: string) {
   const userId = await requireUserId();
-  const reminder = await prisma.reminder.findFirst({ where: { id: reminderId, userId } });
+  const reminder = await prisma.reminder.findFirst({
+    where: { id: reminderId, userId },
+    include: { user: { select: { timezone: true } } },
+  });
   if (!reminder) throw new Error('Not found');
 
-  const date = startOfDay();
+  const date = startOfDay(zonedDate(reminder.user.timezone));
   await prisma.doseRecord.upsert({
     where: { reminderId_date: { reminderId, date } },
     update: { takenAt: new Date() },
@@ -118,10 +121,13 @@ export async function checkInDose(reminderId: string) {
 
 export async function undoDose(reminderId: string) {
   const userId = await requireUserId();
-  const reminder = await prisma.reminder.findFirst({ where: { id: reminderId, userId } });
+  const reminder = await prisma.reminder.findFirst({
+    where: { id: reminderId, userId },
+    include: { user: { select: { timezone: true } } },
+  });
   if (!reminder) throw new Error('Not found');
 
-  const date = startOfDay();
+  const date = startOfDay(zonedDate(reminder.user.timezone));
   await prisma.doseRecord.upsert({
     where: { reminderId_date: { reminderId, date } },
     update: { takenAt: null },

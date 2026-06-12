@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { startOfDay } from '@/lib/dates';
+import { startOfDay, zonedDate } from '@/lib/dates';
 import { buildRecommendations } from '@/lib/ai';
 import { sendDailySummaryEmail } from '@/lib/email/send';
 
@@ -15,13 +15,15 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const since = startOfDay(new Date());
+  const realNow = new Date();
 
   const users = await prisma.user.findMany({ where: { notifEmailSummary: true } });
 
   let sent = 0;
 
   for (const user of users) {
+    // "Today" means the user's local calendar day, not the server's.
+    const since = startOfDay(zonedDate(user.timezone, realNow));
     const latest = await prisma.vitalLog.findFirst({
       where: { userId: user.id, ts: { gte: since } },
       orderBy: { ts: 'desc' },
