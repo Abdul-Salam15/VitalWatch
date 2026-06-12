@@ -2,8 +2,12 @@ name: Check medication reminders
 
 on:
   schedule:
-    # Every 15 minutes. GitHub may delay scheduled runs slightly, which is fine here.
-    - cron: '*/15 * * * *'
+    # Every 5 minutes — the minimum interval GitHub Actions supports.
+    # GitHub does not guarantee scheduled runs fire on time and may delay or
+    # skip them by hours under load, so this should not be the only mechanism
+    # relied on for time-sensitive caregiver alerts. See render.yaml for a
+    # recommended external cron pinger that calls the same endpoint.
+    - cron: '*/5 * * * *'
   workflow_dispatch: {}
 
 jobs:

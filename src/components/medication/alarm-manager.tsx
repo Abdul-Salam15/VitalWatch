@@ -13,9 +13,9 @@ interface AlarmManagerProps {
 }
 
 const STORAGE_KEY = 'vw.alarmedDoses';
-const TICK_MS = 15_000;
+const TICK_MS = 5_000;
 const SNOOZE_MS = 5 * 60 * 1000;
-const EMAIL_CHECK_THROTTLE_MS = 60 * 1000;
+const EMAIL_CHECK_THROTTLE_MS = 30 * 1000;
 
 function loadAlarmed(): Set<string> {
   try {
