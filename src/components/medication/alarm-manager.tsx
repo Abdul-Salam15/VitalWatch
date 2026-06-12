@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { doseState, type ReminderWithWeek } from '@/lib/medication';
-import { dateKey } from '@/lib/dates';
+import { dateKey, todayIdx } from '@/lib/dates';
 import { checkInDose } from '@/lib/actions/reminders';
 import { AlarmModal, type AlarmDose } from '@/components/medication/alarm-modal';
 
@@ -15,6 +15,7 @@ interface AlarmManagerProps {
 const STORAGE_KEY = 'vw.alarmedDoses';
 const TICK_MS = 15_000;
 const SNOOZE_MS = 5 * 60 * 1000;
+const EMAIL_CHECK_THROTTLE_MS = 60 * 1000;
 
 function loadAlarmed(): Set<string> {
   try {
@@ -59,6 +60,7 @@ export function AlarmManager({ reminders, notifBrowser }: AlarmManagerProps) {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const snoozeRef = useRef<Map<string, number>>(new Map());
   const statusRef = useRef<Map<string, string>>(new Map());
+  const lastEmailCheckRef = useRef(0);
 
   // Unlock the AudioContext on the user's first interaction — required by
   // browser autoplay policies before any sound can play.
@@ -108,6 +110,25 @@ export function AlarmManager({ reminders, notifBrowser }: AlarmManagerProps) {
       statusRef.current.set(r.id, status);
     }
     if (statusChanged) router.refresh();
+
+    // The scheduled cron job can be delayed by hours, so also trigger the
+    // reminder/escalation email check from the client whenever a dose is
+    // overdue and its email hasn't been sent yet (throttled to avoid spam).
+    const ti = todayIdx(now);
+    const needsEmailCheck = reminders.some((r) => {
+      if (!r.active) return false;
+      const st = doseState(r, now);
+      const todayDose = r.weekDoses[ti];
+      if (st.status === 'late') return !todayDose?.reminderEmailSentAt;
+      if (st.status === 'escalated') return !todayDose?.escalationEmailSentAt;
+      return false;
+    });
+    if (needsEmailCheck && Date.now() - lastEmailCheckRef.current > EMAIL_CHECK_THROTTLE_MS) {
+      lastEmailCheckRef.current = Date.now();
+      fetch('/api/reminders/check', { method: 'POST' })
+        .then(() => router.refresh())
+        .catch(() => {});
+    }
 
     const due = reminders.filter((r) => {
       if (!r.active) return false;

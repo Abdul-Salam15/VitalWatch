@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getRemindersWithWeek } from '@/lib/data';
-import { doseState } from '@/lib/medication';
-import { startOfDay, todayIdx, zonedDate } from '@/lib/dates';
-import { sendMedicationReminderEmail, sendCaregiverAlertEmail } from '@/lib/email/send';
+import { checkUserReminders } from '@/lib/reminders/check';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,65 +23,9 @@ export async function GET(req: NextRequest) {
   let escalationsSent = 0;
 
   for (const user of users) {
-    // Evaluate "due" times in the user's own timezone, not the server's —
-    // a reminder set for "09:11" means 09:11 local to the user.
-    const now = zonedDate(user.timezone, realNow);
-    const date = startOfDay(now);
-    const ti = todayIdx(now);
-
-    const reminders = await getRemindersWithWeek(user.id, now);
-
-    for (const r of reminders) {
-      if (!r.active) continue;
-      const st = doseState(r, now);
-      const today = r.weekDoses[ti];
-
-      // Send the patient reminder for both 'late' and 'escalated' — a dose can
-      // jump straight to 'escalated' between cron ticks if the escalation
-      // window is shorter than the polling interval.
-      if ((st.status === 'late' || st.status === 'escalated') && user.notifMedReminderEmail && !today?.reminderEmailSentAt) {
-        try {
-          await sendMedicationReminderEmail({
-            to: user.email,
-            patientName: user.name,
-            medName: r.name,
-            dosage: r.dosage,
-            time: r.time,
-            escalation: r.escalation,
-          });
-          await prisma.doseRecord.upsert({
-            where: { reminderId_date: { reminderId: r.id, date } },
-            update: { reminderEmailSentAt: realNow },
-            create: { reminderId: r.id, date, reminderEmailSentAt: realNow },
-          });
-          remindersSent++;
-        } catch (err) {
-          console.error(`[cron] failed to send reminder email for user ${user.id}, reminder ${r.id}:`, err);
-        }
-      }
-
-      if (st.status === 'escalated' && user.notifCaregiverMissedDose && user.caregiverEmail && !today?.escalationEmailSentAt) {
-        try {
-          await sendCaregiverAlertEmail({
-            to: user.caregiverEmail,
-            patientName: user.name,
-            caregiverName: user.caregiverName || 'a designated caregiver',
-            medName: r.name,
-            dosage: r.dosage,
-            time: r.time,
-            overdueMin: st.overdueMin || 0,
-          });
-          await prisma.doseRecord.upsert({
-            where: { reminderId_date: { reminderId: r.id, date } },
-            update: { escalationEmailSentAt: realNow },
-            create: { reminderId: r.id, date, escalationEmailSentAt: realNow },
-          });
-          escalationsSent++;
-        } catch (err) {
-          console.error(`[cron] failed to send caregiver alert for user ${user.id}, reminder ${r.id}:`, err);
-        }
-      }
-    }
+    const result = await checkUserReminders(user, realNow);
+    remindersSent += result.remindersSent;
+    escalationsSent += result.escalationsSent;
   }
 
   return NextResponse.json({ ok: true, remindersSent, escalationsSent });
