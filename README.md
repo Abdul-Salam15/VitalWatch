@@ -68,54 +68,51 @@ VitalWatch is a personal health-monitoring web app built with **Next.js (App Rou
 
 ### High-level overview
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                              Browser                                  │
-│  ┌────────────┐  ┌──────────────┐  ┌────────────────────────────┐   │
-│  │ Dashboard /  │  │ Alarm Manager │  │ Notifications Bell          │   │
-│  │ Log Health / │  │ (client poll, │  │ (localStorage read-state,   │   │
-│  │ Reminders /  │  │  5s tick,     │  │  click-outside to close)    │   │
-│  │ Caregiver /  │  │  Web Audio,   │  └────────────────────────────┘   │
-│  │ Settings     │  │  Notification │                                    │
-│  │ (RSC pages)  │  │  API)         │                                    │
-│  └──────┬───────┘  └──────┬────────┘                                    │
-└─────────┼─────────────────┼──────────────────────────────────────────┘
-          │ Server Actions   │ fetch('/api/reminders/check')
-          ▼                  ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                      Next.js App Router (server)                      │
-│  ┌─────────────────┐   ┌──────────────────────┐   ┌────────────────┐ │
-│  │ src/lib/actions/ │   │ src/app/api/...       │   │ src/lib/data.ts │ │
-│  │  - auth.ts       │   │  - auth/[...nextauth] │   │ (cached reads,  │ │
-│  │  - vitals.ts     │   │  - reminders/check    │   │  per-request    │ │
-│  │  - reminders.ts  │   │  - cron/check-reminders│   │  memoization)  │ │
-│  │  - settings.ts   │   │  - cron/daily-summary  │   └────────────────┘ │
-│  │  - report.tsx    │   └──────────────────────┘                       │
-│  └────────┬─────────┘                                                  │
-│           │                                                            │
-│  ┌────────▼─────────┐   ┌───────────────────┐   ┌───────────────────┐ │
-│  │ src/lib/medication│   │ src/lib/ai.ts      │   │ src/lib/email/    │ │
-│  │ .ts (dose state,  │   │ (rule-based vitals │   │ send.ts + brevo.ts │ │
-│  │  adherence, alerts)│  │  analysis)         │   │ (Brevo API + React │ │
-│  └────────┬─────────┘   └────────────────────┘   │  Email templates)  │ │
-│           │                                        └─────────┬─────────┘ │
-│  ┌────────▼─────────────────────────────────────────────────▼─────────┐ │
-│  │                          Prisma Client (src/lib/db.ts)              │ │
-│  └────────┬─────────────────────────────────────────────────┬─────────┘ │
-└───────────┼─────────────────────────────────────────────────┼───────────┘
-            ▼                                                   ▼
-    ┌──────────────────┐                              ┌─────────────────┐
-    │ PostgreSQL        │                              │ Brevo (SMTP/API) │
-    │ (User, VitalLog,  │                              │ → patient /      │
-    │  Reminder,        │                              │   caregiver inbox│
-    │  DoseRecord)      │                              └─────────────────┘
-    └──────────────────┘
+```mermaid
+graph TB
+    subgraph Browser["Browser"]
+        Pages["RSC pages: Dashboard, Log Health,\nReminders, Caregiver, Settings"]
+        Alarm["Alarm Manager\n(5s poll · Web Audio · Notification API)"]
+        Bell["Notifications Bell\n(localStorage read-state)"]
+    end
 
-External schedulers (GitHub Actions, optional cron-job.org / UptimeRobot)
-        │
-        ▼
-GET /api/cron/check-reminders   (every ~5 min, Bearer CRON_SECRET)
-GET /api/cron/daily-summary     (daily at 07:00 UTC, Bearer CRON_SECRET)
+    subgraph Server["Next.js App Router (server)"]
+        Actions["Server Actions — src/lib/actions/*\nauth · vitals · reminders · settings · report"]
+        API["API Routes — src/app/api/*\nauth/[...nextauth] · reminders/check\ncron/check-reminders · cron/daily-summary"]
+        Data["src/lib/data.ts\n(cached reads, per-request memoized)"]
+        Medication["src/lib/medication.ts\ndose state · adherence · alerts"]
+        AI["src/lib/ai.ts\nrule-based vitals analysis"]
+        Reminders["src/lib/reminders/check.ts\ncheckUserReminders (idempotent)"]
+        EmailLib["src/lib/email/*\nBrevo client + React Email templates"]
+        Prisma["Prisma Client — src/lib/db.ts"]
+    end
+
+    DB[("PostgreSQL\nUser · VitalLog · Reminder · DoseRecord")]
+    Brevo["Brevo\n(transactional email API)"]
+    Schedulers["GitHub Actions /\nexternal cron pinger"]
+
+    Pages -- "calls" --> Actions
+    Pages -- "reads via" --> Data
+    Alarm -- "POST /api/reminders/check" --> API
+    Bell --- Pages
+
+    Actions --> AI
+    Actions --> Medication
+    Actions --> EmailLib
+    Actions --> Prisma
+
+    API --> Reminders
+    Reminders --> Medication
+    Reminders --> EmailLib
+    Reminders --> Prisma
+
+    Data --> Medication
+    Data --> Prisma
+
+    Prisma --> DB
+    EmailLib --> Brevo
+
+    Schedulers -- "GET /api/cron/check-reminders (~5 min)\nGET /api/cron/daily-summary (07:00 UTC)\nAuthorization: Bearer CRON_SECRET" --> API
 ```
 
 **Key architectural choices:**
