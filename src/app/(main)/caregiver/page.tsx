@@ -3,6 +3,7 @@ import { getCurrentUser, getRecentLogs, getRemindersWithWeek } from '@/lib/data'
 import { Icon } from '@/components/ui/icon';
 import { AccessCard } from '@/components/caregiver/access-card';
 import { CaregiverPreview } from '@/components/caregiver/caregiver-preview';
+import { zonedDate } from '@/lib/dates';
 
 export default async function Caregiver() {
   const user = await getCurrentUser();
@@ -10,7 +11,7 @@ export default async function Caregiver() {
 
   const [logs, reminders] = await Promise.all([
     getRecentLogs(user.id, 14),
-    getRemindersWithWeek(user.id),
+    getRemindersWithWeek(user.id, zonedDate(user.timezone)),
   ]);
 
   return (

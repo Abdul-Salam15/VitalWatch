@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getUserByAccessToken, getRecentLogs, getRemindersWithWeek } from '@/lib/data';
 import { CaregiverPreview } from '@/components/caregiver/caregiver-preview';
+import { zonedDate } from '@/lib/dates';
 
 export default async function PublicCaregiverPage({ params }: { params: { token: string } }) {
   const user = await getUserByAccessToken(params.token);
@@ -8,7 +9,7 @@ export default async function PublicCaregiverPage({ params }: { params: { token:
 
   const [logs, reminders] = await Promise.all([
     getRecentLogs(user.id, 14),
-    getRemindersWithWeek(user.id),
+    getRemindersWithWeek(user.id, zonedDate(user.timezone)),
   ]);
 
   return (

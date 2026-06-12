@@ -44,6 +44,31 @@ export function relTime(d: string | number | Date): string {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+// Minutes such that `localTime = utcTime + offset`, for `date` in `timeZone`.
+export function tzOffsetMinutes(timeZone: string, date: Date = new Date()): number {
+  try {
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hourCycle: 'h23',
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+    });
+    const parts: Record<string, string> = {};
+    for (const p of dtf.formatToParts(date)) parts[p.type] = p.value;
+    const asUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+    return Math.round((asUTC - date.getTime()) / 60000);
+  } catch {
+    return 0;
+  }
+}
+
+// A Date whose local getters (getHours, getDay, getDate, getMonth, getFullYear, ...)
+// reflect the wall-clock time in `timeZone`, regardless of the host's own timezone.
+// Used so date-arithmetic helpers below "just work" for a given user's timezone.
+export function zonedDate(timeZone: string, date: Date = new Date()): Date {
+  return new Date(date.getTime() + tzOffsetMinutes(timeZone, date) * 60000);
+}
+
 // today's weekday index (Mon=0 … Sun=6)
 export function todayIdx(date: Date = new Date()): number {
   return (date.getDay() + 6) % 7;

@@ -1,24 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { BottomTabs } from '@/components/layout/bottom-tabs';
 import { MobileDrawer } from '@/components/layout/mobile-drawer';
 import { AlarmManager } from '@/components/medication/alarm-manager';
+import { updateTimezone } from '@/lib/actions/settings';
 import type { ReminderWithWeek } from '@/lib/medication';
 
 interface ShellProps {
   user: { name: string; email: string };
   reminders: ReminderWithWeek[];
   notifBrowser: boolean;
+  timezone: string;
   notificationsSlot: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function Shell({ user, reminders, notifBrowser, notificationsSlot, children }: ShellProps) {
+export function Shell({ user, reminders, notifBrowser, timezone, notificationsSlot, children }: ShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
+
+  // Keep the stored timezone in sync with the browser's — used by reminder
+  // emails and other server-side jobs to evaluate "due" times correctly.
+  useEffect(() => {
+    try {
+      const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (detected && detected !== timezone) updateTimezone(detected);
+    } catch {
+      // Intl unavailable — keep the stored/default timezone
+    }
+  }, [timezone]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F6F8F7]">

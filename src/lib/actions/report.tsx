@@ -5,6 +5,7 @@ import { getCurrentUser, getLogsInRange, getRemindersWithWeek } from '@/lib/data
 import { rangeBounds, presetLabel, type ReportRange } from '@/components/report/report-metrics';
 import { sendCaregiverReportEmail } from '@/lib/email/send';
 import { PatientReportPdf } from '@/lib/pdf/patient-report-pdf';
+import { zonedDate } from '@/lib/dates';
 
 export interface EmailReportResult {
   error?: string;
@@ -20,7 +21,7 @@ export async function emailPatientReport(range: ReportRange): Promise<EmailRepor
 
   const [logs, reminders] = await Promise.all([
     getLogsInRange(user.id, bounds.from ?? undefined, bounds.to ?? undefined),
-    getRemindersWithWeek(user.id),
+    getRemindersWithWeek(user.id, zonedDate(user.timezone)),
   ]);
 
   const periodLabel = presetLabel(range, bounds);

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser, getRecentLogs, getRemindersWithWeek } from '@/lib/data';
 import { DashboardPage } from '@/components/dashboard/dashboard-page';
+import { zonedDate } from '@/lib/dates';
 
 export default async function Dashboard() {
   const user = await getCurrentUser();
@@ -8,7 +9,7 @@ export default async function Dashboard() {
 
   const [logs, reminders] = await Promise.all([
     getRecentLogs(user.id, 14),
-    getRemindersWithWeek(user.id),
+    getRemindersWithWeek(user.id, zonedDate(user.timezone)),
   ]);
 
   return (
