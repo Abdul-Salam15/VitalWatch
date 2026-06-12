@@ -3,6 +3,7 @@ import { sendEmail } from '@/lib/email/brevo';
 import { MedicationReminderEmail } from '@/components/emails/medication-reminder';
 import { CaregiverAlertEmail } from '@/components/emails/caregiver-alert';
 import { CaregiverVitalAlertEmail } from '@/components/emails/caregiver-vital-alert';
+import { CaregiverInviteEmail } from '@/components/emails/caregiver-invite';
 import { DailySummaryEmail } from '@/components/emails/daily-summary';
 import { PasswordResetEmail } from '@/components/emails/password-reset';
 import { CaregiverReportEmail } from '@/components/emails/caregiver-report';
@@ -57,6 +58,27 @@ export async function sendCaregiverAlertEmail(opts: {
     to: opts.to,
     toName: opts.caregiverName,
     subject: `⚠️ Missed medication alert — ${opts.patientName}`,
+    html,
+  });
+}
+
+export async function sendCaregiverInviteEmail(opts: {
+  to: string;
+  patientName: string;
+  caregiverName: string;
+  accessToken: string;
+}) {
+  const shareUrl = `${APP_URL}/caregiver/${opts.accessToken}`;
+  const html = await render(CaregiverInviteEmail({
+    patientName: opts.patientName,
+    caregiverName: opts.caregiverName,
+    shareUrl,
+  }));
+
+  return sendEmail({
+    to: opts.to,
+    toName: opts.caregiverName,
+    subject: `You've been added as ${opts.patientName}'s caregiver on VitalWatch`,
     html,
   });
 }

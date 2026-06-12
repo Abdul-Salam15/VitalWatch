@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { NOTIF_FIELDS, type NotifKey } from '@/lib/notification-fields';
+import { sendCaregiverInviteEmail } from '@/lib/email/send';
 
 async function requireUserId(): Promise<string> {
   const session = await auth();
@@ -45,10 +46,30 @@ export async function updateCaregiver(_prev: ActionResult | undefined, formData:
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message || 'Invalid input' };
 
+  const existing = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, caregiverEmail: true, accessToken: true },
+  });
+
   await prisma.user.update({
     where: { id: userId },
     data: { caregiverName: parsed.data.caregiverName, caregiverEmail: parsed.data.caregiverEmail },
   });
+
+  const newEmail = parsed.data.caregiverEmail;
+  if (newEmail && newEmail !== existing?.caregiverEmail) {
+    try {
+      await sendCaregiverInviteEmail({
+        to: newEmail,
+        patientName: existing?.name || 'A VitalWatch patient',
+        caregiverName: parsed.data.caregiverName || 'there',
+        accessToken: existing?.accessToken || '',
+      });
+    } catch (err) {
+      console.error('[settings] failed to send caregiver invite email:', err);
+    }
+  }
+
   revalidatePath('/settings');
   revalidatePath('/caregiver');
   return { success: true };

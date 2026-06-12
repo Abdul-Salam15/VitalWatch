@@ -5,19 +5,24 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { BottomTabs } from '@/components/layout/bottom-tabs';
 import { MobileDrawer } from '@/components/layout/mobile-drawer';
+import { AlarmManager } from '@/components/medication/alarm-manager';
+import type { ReminderWithWeek } from '@/lib/medication';
 
 interface ShellProps {
   user: { name: string; email: string };
+  reminders: ReminderWithWeek[];
+  notifBrowser: boolean;
   notificationsSlot: React.ReactNode;
   children: React.ReactNode;
 }
 
-export function Shell({ user, notificationsSlot, children }: ShellProps) {
+export function Shell({ user, reminders, notifBrowser, notificationsSlot, children }: ShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F6F8F7]">
+      <AlarmManager reminders={reminders} notifBrowser={notifBrowser} />
       <Sidebar user={user} collapsed={collapsed} setCollapsed={setCollapsed} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header user={user} notificationsSlot={notificationsSlot} onMenu={() => setDrawer(true)} />
