@@ -9,10 +9,10 @@ export interface CaregiverVitalAlertEmailProps {
   spo2: number;
   temp: number;
   ts: Date | string;
-  appUrl: string;
+  shareUrl: string;
 }
 
-export function CaregiverVitalAlertEmail({ patientName, caregiverName, reason, hr, spo2, temp, ts, appUrl }: CaregiverVitalAlertEmailProps) {
+export function CaregiverVitalAlertEmail({ patientName, caregiverName, reason, hr, spo2, temp, ts, shareUrl }: CaregiverVitalAlertEmailProps) {
   return (
     <EmailLayout
       previewText={`Vital sign alert — ${patientName}`}
@@ -27,7 +27,7 @@ export function CaregiverVitalAlertEmail({ patientName, caregiverName, reason, h
         { label: 'Temperature', value: `${temp}°C` },
         { label: 'Recorded', value: fmtDateTime(ts) },
       ]}
-      cta={{ label: 'Open caregiver dashboard', url: `${appUrl}/caregiver` }}
+      cta={{ label: 'Open caregiver dashboard', url: shareUrl }}
       footnote={`You are receiving this because anomaly alerts are enabled for ${patientName}. Manage alert preferences in VitalWatch settings.`}
     />
   );

@@ -43,6 +43,7 @@ export async function sendCaregiverAlertEmail(opts: {
   dosage: string;
   time: string;
   overdueMin: number;
+  accessToken: string;
 }) {
   const html = await render(CaregiverAlertEmail({
     patientName: opts.patientName,
@@ -51,7 +52,7 @@ export async function sendCaregiverAlertEmail(opts: {
     dosage: opts.dosage,
     time: opts.time,
     overdueMin: opts.overdueMin,
-    appUrl: APP_URL,
+    shareUrl: `${APP_URL}/caregiver/${opts.accessToken}`,
   }));
 
   return sendEmail({
@@ -92,6 +93,7 @@ export async function sendCaregiverVitalAlertEmail(opts: {
   spo2: number;
   temp: number;
   ts: Date;
+  accessToken: string;
 }) {
   const html = await render(CaregiverVitalAlertEmail({
     patientName: opts.patientName,
@@ -101,7 +103,7 @@ export async function sendCaregiverVitalAlertEmail(opts: {
     spo2: opts.spo2,
     temp: opts.temp,
     ts: opts.ts,
-    appUrl: APP_URL,
+    shareUrl: `${APP_URL}/caregiver/${opts.accessToken}`,
   }));
 
   return sendEmail({

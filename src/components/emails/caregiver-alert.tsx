@@ -8,10 +8,10 @@ export interface CaregiverAlertEmailProps {
   dosage: string;
   time: string;
   overdueMin: number;
-  appUrl: string;
+  shareUrl: string;
 }
 
-export function CaregiverAlertEmail({ patientName, caregiverName, medName, dosage, time, overdueMin, appUrl }: CaregiverAlertEmailProps) {
+export function CaregiverAlertEmail({ patientName, caregiverName, medName, dosage, time, overdueMin, shareUrl }: CaregiverAlertEmailProps) {
   return (
     <EmailLayout
       previewText={`Missed medication alert — ${patientName}`}
@@ -26,7 +26,7 @@ export function CaregiverAlertEmail({ patientName, caregiverName, medName, dosag
         { label: 'Status', value: `Overdue by ${fmtDuration(overdueMin)}` },
         { label: 'Patient', value: patientName },
       ]}
-      cta={{ label: 'Open caregiver dashboard', url: `${appUrl}/caregiver` }}
+      cta={{ label: 'Open caregiver dashboard', url: shareUrl }}
       footnote={`You are receiving this because missed-dose alerts are enabled for ${patientName}. Manage alert preferences in VitalWatch settings.`}
     />
   );

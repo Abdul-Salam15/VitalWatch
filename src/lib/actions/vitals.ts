@@ -81,6 +81,7 @@ export async function addVitalLog(_prev: AddLogResult | undefined, formData: For
           spo2: parsed.data.spo2,
           temp: parsed.data.temp,
           ts: log.ts,
+          accessToken: user.accessToken,
         });
       } catch (err) {
         console.error('[vitals] failed to send caregiver anomaly alert:', err);

@@ -15,6 +15,7 @@ export interface ReminderCheckUser {
   timezone: string;
   caregiverName: string;
   caregiverEmail: string;
+  accessToken: string;
   notifMedReminderEmail: boolean;
   notifCaregiverMissedDose: boolean;
 }
@@ -77,6 +78,7 @@ export async function checkUserReminders(user: ReminderCheckUser, realNow: Date 
           dosage: r.dosage,
           time: r.time,
           overdueMin: st.overdueMin || 0,
+          accessToken: user.accessToken,
         });
         await prisma.doseRecord.upsert({
           where: { reminderId_date: { reminderId: r.id, date } },
